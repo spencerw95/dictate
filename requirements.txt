@@ -1,0 +1,6 @@
+faster-whisper
+sounddevice
+keyboard
+pyperclip
+numpy
+anthropic

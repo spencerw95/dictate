@@ -1,0 +1,4 @@
+Paste your Anthropic API key on the line below, then rename this file to: api-key.txt
+Get a key at https://console.anthropic.com/  (the app pastes the raw transcript if there's no key)
+
+sk-ant-...

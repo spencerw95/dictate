@@ -1,0 +1,8 @@
+# SECRET — never commit your API key
+api-key.txt
+
+# runtime junk
+dictate.log
+dictate.pid
+__pycache__/
+*.pyc
