@@ -426,12 +426,21 @@ def _callback(indata, _n, _t, _status):
 
 
 def open_stream():
-    # ponytail: mic stream stays open for the app's lifetime - zero start latency,
-    # so the first word is never lost. Trade-off: mic-in-use indicator stays on.
+    # ponytail: refresh PortAudio's device list first - it caches the default mic at
+    # init, so plugging in a new mic / changing the Windows default is invisible
+    # until we re-init. This is what lets a mic swap work without restarting the app.
     global stream
+    try:
+        sd._terminate(); sd._initialize()
+    except Exception as e:
+        log("audio reinit skipped:", e)
     stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32",
                             callback=_callback)
     stream.start()
+    try:
+        log("mic:", sd.query_devices(kind="input")["name"])
+    except Exception:
+        pass
 
 
 _rec_hotkeys = []
@@ -458,13 +467,15 @@ def start_rec():
     global frames, recording, rec_started, _rec_hotkeys
     frames = []
     LEVELS.clear()
-    if stream is None or not stream.active:  # mic died (sleep/unplug) - reopen
-        try:
-            if stream:
-                stream.close()
-        except Exception:
-            pass
-        open_stream()
+    # reopen on the CURRENT default mic every time - handles a newly-plugged mic or a
+    # changed Windows default without restarting, and recovers a slept/unplugged mic
+    try:
+        if stream:
+            stream.close()
+    except Exception:
+        pass
+    open_stream()
+    time.sleep(0.12)  # let the device start streaming so the first word isn't clipped
     recording = True
     rec_started = time.time()
     # while recording only: Enter = finish, Esc = cancel; both swallowed so they
